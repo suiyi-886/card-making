@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>生日贺卡生成器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Playfair+Display:wght@500;700&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#FFF6F2;
+    --ink:#4A3F3F;
+    --ink-soft:#9a8a8a;
+    --gold:#FF7EA8;
+    --gold2:#FFC24B;
+    --mint:#7FD1B0;
+    --line:#F1E2DC;
+    --panel:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  header.top{
+    text-align:center;
+    margin-bottom:40px;
+  }
+  header.top .eyebrow{
+    font-size:12px;
+    letter-spacing:.42em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:14px;
+  }
+  header.top h1{
+    font-family:"ZCOOL KuaiLe","Noto Serif SC",cursive;
+    font-weight:400;
+    font-size:38px;
+    margin:0 0 8px;
+    letter-spacing:.02em;
+    color:var(--ink);
+  }
+  header.top .cake{
+    font-size:30px;
+    display:inline-block;
+    animation:bounce 1.8s ease-in-out infinite;
+  }
+  @keyframes bounce{
+    0%,100%{transform:translateY(0) rotate(-4deg);}
+    50%{transform:translateY(-9px) rotate(4deg);}
+  }
+  header.top p{
+    color:var(--ink-soft);
+    font-size:14px;
+    font-weight:300;
+    margin:0;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:360px 1fr;
+    gap:40px;
+    align-items:start;
+  }
+  @media (max-width:840px){
+    .layout{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px;
+  }
+  .field{margin-bottom:22px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    letter-spacing:.04em;
+    color:var(--ink);
+    margin-bottom:8px;
+    font-weight:500;
+  }
+  .field .hint{
+    font-size:12px;
+    color:#9a958c;
+    font-weight:300;
+    margin-top:6px;
+  }
+  input[type=text], input[type=number], textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:#FCFBF8;
+    border-radius:9px;
+    padding:12px 14px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--ink);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  input:focus, textarea:focus{
+    outline:none;
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(201,165,92,.12);
+  }
+  textarea{resize:vertical;min-height:84px;}
+  .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}
+  button{
+    font-family:inherit;
+    font-size:14px;
+    cursor:pointer;
+    border-radius:9px;
+    padding:11px 16px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    transition:all .18s ease;
+  }
+  button:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-1px);}
+  button.primary{
+    background:linear-gradient(135deg,var(--gold),#FF9FBE);
+    color:#fff;
+    border-color:transparent;
+    flex:1 1 100%;
+    letter-spacing:.1em;
+    font-weight:500;
+    box-shadow:0 8px 18px rgba(255,126,168,.32);
+  }
+  button.primary:hover{background:linear-gradient(135deg,#FF6E9C,#FF8FB0);color:#fff;}
+  button.ghost{flex:1;}
+
+  /* ---- 风格 / 类型 选择器 ---- */
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg button{
+    flex:1 1 auto;
+    min-width:78px;
+    border:1.5px solid var(--line);
+    background:#FFF;
+    color:var(--ink-soft);
+    border-radius:999px;
+    padding:9px 10px;
+    font-size:13px;
+    font-family:inherit;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .seg button:hover{border-color:var(--gold);color:var(--gold);transform:none;}
+  .seg button.active{
+    background:var(--gold);
+    color:#fff;
+    border-color:var(--gold);
+    box-shadow:0 6px 14px rgba(255,126,168,.3);
+  }
+  .field .sub{font-size:12px;color:#b3a6a6;font-weight:300;margin-top:6px;}
+
+  /* ---- 贺卡可爱装饰 ---- */
+  .card .sticker{
+    position:absolute;
+    font-size:22px;
+    z-index:2;
+    opacity:.92;
+    user-select:none;
+  }
+  .card .sticker.tl{top:24px;left:26px;}
+  .card .sticker.tr{top:24px;right:26px;}
+  .card .sticker.br{bottom:26px;right:28px;}
+  .card.pop{animation:pop .45s cubic-bezier(.2,1.3,.5,1);}
+  @keyframes pop{
+    0%{transform:scale(.94) rotate(-1deg);}
+    60%{transform:scale(1.03) rotate(.6deg);}
+    100%{transform:scale(1) rotate(0);}
+  }
+  /* 撒花 */
+  .confetti{
+    position:fixed;
+    top:0;left:0;
+    font-size:20px;
+    pointer-events:none;
+    z-index:9999;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    0%{transform:translateY(-10px) rotate(0);opacity:1;}
+    100%{transform:translateY(70vh) rotate(360deg);opacity:0;}
+  }
+
+  /* ---- 贺卡预览 ---- */
+  .preview-col{display:flex;flex-direction:column;align-items:center;}
+  .card{
+    width:100%;
+    max-width:440px;
+    aspect-ratio:4/5;
+    background:linear-gradient(165deg,#FFFDFB 0%,#FFF1F5 100%);
+    border:2px solid #FFE0EA;
+    border-radius:22px;
+    padding:38px 32px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    position:relative;
+    box-shadow:0 22px 50px rgba(255,140,170,.18);
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:16px;
+    border:1px solid var(--gold);
+    border-radius:10px;
+    opacity:.55;
+    pointer-events:none;
+  }
+  .card .eyebrow{
+    font-size:11px;
+    letter-spacing:.4em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-top:14px;
+    z-index:1;
+  }
+  .card .name{
+    font-family:"ZCOOL KuaiLe","Noto Serif SC",cursive;
+    font-weight:400;
+    font-size:42px;
+    margin:18px 0 6px;
+    color:var(--gold);
+    z-index:1;
+    word-break:break-word;
+  }
+  .card .age{
+    font-size:14px;
+    color:var(--ink-soft);
+    letter-spacing:.06em;
+    z-index:1;
+  }
+  .card .divider{
+    width:46px;
+    height:1px;
+    background:var(--gold);
+    margin:22px 0;
+    z-index:1;
+  }
+  .card .blessing{
+    font-family:"Noto Serif SC",serif;
+    font-size:16px;
+    color:#2A2A2A;
+    line-height:1.95;
+    white-space:pre-line;
+    z-index:1;
+    flex:1;
+  }
+  .card .tags{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    margin-top:18px;
+    z-index:1;
+  }
+  .card .tag{
+    font-size:12px;
+    color:var(--gold);
+    border:1px solid var(--gold);
+    border-radius:999px;
+    padding:5px 12px;
+    letter-spacing:.04em;
+  }
+  .card .sig{
+    margin-top:18px;
+    font-size:11px;
+    letter-spacing:.3em;
+    text-transform:uppercase;
+    color:#b9b1a3;
+    z-index:1;
+  }
+  .preview-actions{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+    margin-top:22px;width:100%;max-width:440px;
+  }
+  .preview-actions button{flex:1 1 auto;min-width:120px;}
+
+  /* ---- 打印 ---- */
+  @media print{
+    body *{visibility:hidden;}
+    .print-area, .print-area *{visibility:visible;}
+    .print-area{
+      position:absolute;left:0;top:0;width:100%;
+      display:flex;justify-content:center;
+    }
+    .card{box-shadow:none;border:none;}
+    .preview-actions,header.top,.panel,.btn-row{display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Birthday Card Studio</div>
+    <h1><span class="cake">🎂</span> 生日贺卡生成器</h1>
+    <p>挑个类型和风格，填上名字与爱好，一键生成可爱又走心的专属贺卡</p>
+  </header>
+
+  <div class="layout">
+    <!-- 输入面板 -->
+    <section class="panel" aria-label="信息输入">
+      <div class="field">
+        <label for="name">姓名 / 称呼</label>
+        <input type="text" id="name" placeholder="例如：林晚" autocomplete="off" />
+      </div>
+      <div class="field" id="ageField">
+        <label for="age">年龄</label>
+        <input type="number" id="age" placeholder="例如：28" min="1" max="120" />
+      </div>
+      <div class="field">
+        <label for="hobbies">兴趣爱好</label>
+        <textarea id="hobbies" placeholder="用逗号分隔，例如：摄影, 读书, 旅行"></textarea>
+        <div class="hint">多个爱好用「,」或「、」隔开，系统会写进祝福语</div>
+      </div>
+      <div class="field">
+        <label>贺卡类型</label>
+        <div class="seg" id="typeSeg">
+          <button type="button" data-v="birthday" class="active">🎂 生日贺卡</button>
+          <button type="button" data-v="anniversary">💞 纪念日卡</button>
+          <button type="button" data-v="cheer">✨ 鼓励卡</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>内容风格</label>
+        <div class="seg" id="styleSeg">
+          <button type="button" data-v="teen" class="active">少年感</button>
+          <button type="button" data-v="humor">幽默风趣</button>
+          <button type="button" data-v="brief">简洁短小</button>
+          <button type="button" data-v="long">走心长文</button>
+        </div>
+        <div class="sub">不同风格会生成不同长度与语气的祝福语</div>
+      </div>
+      <div class="btn-row">
+        <button class="primary" id="genBtn">生成贺卡</button>
+        <button class="ghost" id="shuffleBtn">换一句祝福</button>
+      </div>
+    </section>
+
+    <!-- 预览面板 -->
+    <section class="preview-col">
+      <div class="print-area">
+        <div class="card" id="card">
+          <span class="sticker tl">🎈</span>
+          <span class="sticker tr">✨</span>
+          <span class="sticker br">💛</span>
+          <div class="eyebrow" id="cardEyebrow">🎂 Happy Birthday</div>
+          <div class="name" id="cardName">亲爱的你</div>
+          <div class="age" id="cardAge">又一年，值得纪念</div>
+          <div class="divider"></div>
+          <div class="blessing" id="cardBlessing">在左侧填写信息，点击「生成贺卡」，为你写一段专属祝福。</div>
+          <div class="tags" id="cardTags"></div>
+          <div class="sig">With Love</div>
+        </div>
+      </div>
+      <div class="preview-actions">
+        <button id="downloadBtn">下载图片</button>
+        <button id="printBtn">打印 / 存 PDF</button>
+        <button id="shareBtn">复制分享链接</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- 兴趣 → 祝福续句 词典 ----------
+  // ---------- 工具 ----------
+  function $(id){ return document.getElementById(id); }
+  function parseHobbies(raw){
+    if(!raw) return [];
+    return raw.split(/[,，、;；\s]+/).map(function(s){return s.trim();}).filter(Boolean);
+  }
+  function pickDistinct(n, arr){
+    var copy = arr.slice(), out = [];
+    for(var i=0;i<n && copy.length;i++){
+      out.push(copy.splice(Math.floor(Math.random()*copy.length),1)[0]);
+    }
+    return out;
+  }
+
+  // ---------- 兴趣素材：每个爱好一组“后半句”，贴合爱好本身、彼此差异化 ----------
+  var HOBBY_TAILS = {
+    "摄影":["常能按下快门，把光留住","镜头后面那双眼睛一直亮着","拍到的每一张都是想记住的瞬间"],
+    "拍照":["随手一拍都好看","把平凡日子拍出喜欢的质感","镜头里的温柔一直都在"],
+    "读书":["在字里行间遇见更辽阔的世界","翻到新书第一章时仍会心动","被某句话戳中的瞬间越来越多"],
+    "阅读":["窝着看书的午后越来越长","在书页里找到自己的安静角落","读到好句想分享给人的冲动不减"],
+    "旅行":["走向陌生街道时仍敢出发","地图上画出新的坐标","路上遇见的风都刚好"],
+    "旅游":["收拾行李的期待不减","在异乡迷路也当成冒险","带回来的纪念越来越多"],
+    "烹饪":["在烟火三餐里煮出属于自己的温柔","认真摆盘的样子很好看","炖锅里咕嘟的声音让人安心"],
+    "做饭":["系上围裙就有好心情","把爱盛进一碗汤里","研究新菜谱的夜晚很踏实"],
+    "美食":["吃到好东西会眯眼笑","为觅食跑遍全城也乐意","舌尖上的小旅行一直继续"],
+    "音乐":["耳机里循环的那首歌刚好戳中","跟着旋律晃脑袋的习惯不改","深夜听歌的时刻仍有回响"],
+    "唱歌":["跑调也开心的合唱继续","洗澡时的大嗓门越来越响","KTV里最亮的星还是你"],
+    "听歌":["单曲循环的下雨天也很甜","被歌词击中的深夜有人懂","收藏夹里的小世界越来越满"],
+    "运动":["跑完后畅快的呼吸一直有","汗水落下的瞬间越来越轻松","突破自己的那一下越来越近"],
+    "健身":["和惰性较劲的日常都有回报","镜子里更结实的样子让你骄傲","力竭之后是更自由的自己"],
+    "瑜伽":["拉伸时松一口气的瞬间常在","和自己和解的片刻越来越长","垫子上的安静一直属于你"],
+    "舞蹈":["随音乐乱跳的开心不减","肢体记得的快乐一直都在","旋转时扬起的笑更亮了"],
+    "绘画":["画笔落在纸上的痕迹越来越自在","调色盘上的心情有人懂","画完满意地笑的样子很可爱"],
+    "画画":["涂鸦里的奇思妙想不停","把心情画出来的本事越来越好","随手一画也好看"],
+    "电影":["片尾字幕亮起仍舍不得走","窝着看电影的晚上很治愈","被某个镜头戳中的心还软着"],
+    "游戏":["通关那刻的欢呼继续","和队友开黑的夜晚很热闹","在游戏里做自己的英雄"],
+    "咖啡":["早上那杯刚好的温度一直在","拉花成功的小骄傲常有","咖啡香醒来的早晨很踏实"],
+    "茶":["一盏清茶半日闲的从容","煮茶时的慢时光不慌","回甘里的自在一直有"],
+    "园艺":["看着苗冒芽的惊喜常在","给花浇水的清晨很轻快","阳台上的小森林越来越密"],
+    "养花":["花开那天的开心不减","和植物说话的温柔一直有","阳台变成花园的路很美"],
+    "钓鱼":["等鱼上钩的耐心还在","水边的安静下午很长","收竿时的满足感不减"],
+    "宠物":["回家有人摇尾巴的幸运常在","被无条件信任的幸福很满","毛孩子蹭过来的暖一直有"],
+    "猫":["猫主子赏脸的蹭很治愈","看它睡觉的安静很上头","被猫赖上的运气一直有"],
+    "狗":["出门撒欢的脚印很轻快","被它全情爱着的幸福很满","摇尾巴的小风扇一直转"],
+    "手工":["一针一线的耐心还在","做好小物件的自豪常有","手作里的温度一直暖"],
+    "烘焙":["面包出炉的香很治愈","裱花时的专注很静","分享甜点的快乐不减"],
+    "书法":["笔锋落下的沉静常在","临帖时的定力越来越稳","写完一张的舒坦一直有"],
+    "写作":["把心事写成句子的本事不减","灵感来的深夜很清醒","被读懂的欢喜常在"],
+    "动漫":["二刷也上头的番继续追","中二魂未泯的坦荡很可爱","和角色同悲喜的心还热着"],
+    "滑雪":["雪坡上甩开烦恼的快意常在","风从耳边过的自由很爽","摔了也笑的胆量不减"],
+    "骑行":["风从耳边过的自由一直在","骑到尽头的开阔很畅快","车轮下的远方越来越远"],
+    "爬山":["登顶那刻的辽阔常在","每一步向上的笃定越来越稳","山雾里的呼吸很清"],
+    "rap":["写的词有人听懂，节奏永远踩在心跳上","麦克风前的表达从不设限","你的flow越练越像你自己"],
+    "英雄联盟":["对局多点顺风，少点气人","和朋友开黑的日子，笑声比输赢多","这份热爱一直热气腾腾"],
+    "鹅鸭杀":["当好人时别被冤枉，当内鬼时演技在线","开会甩锅的时机总是刚刚好","在谁真谁假里，你永远看得最清"],
+    "王者荣耀":["推塔的节奏踩得比谁都准","队友坑了，你也能笑着翻盘","峡谷的风，一直吹在你的方向"]
+  };
+  // 兜底模板：必须同时适配“名词爱好(摄影/美食)”与“动词短语爱好(打游戏/听音乐)”，
+  // 统一采用「X带给你的快乐 / 提起X / X这件事 / X常伴你左右 / X陪你」等对两者都成立的句式；
+  // 禁用「在X里/上」「和X之间」「把X变成」等只适配名词的框架（会导致“和打游戏之间”这类病句）。
+  // 注意：句式不以「愿」开头——生成器会在整段前统一加「愿」，各句之间加「，也愿」，
+  // 因此每条只需保证能顺畅接在「愿 / ，也愿」之后即可。
+  var GENERIC_TAILS = [
+    "{h}带给你的快乐，一直陪着你",
+    "提起{h}，你总能眼睛发亮",
+    "{h}这件事，一直让你开心",
+    "{h}常伴你左右，随时给你充电",
+    "{h}陪你，把日子过得有滋有味"
+  ];
+
+  // 常见“动词短语 / 近义说法”爱好 → 词典标准词；命中后即可复用更贴合的专属文案
+  var HOBBY_ALIAS = {
+    "打游戏":"游戏","玩游戏":"游戏","打电玩":"游戏","玩电玩":"游戏","打电动":"游戏","手游":"游戏","网游":"游戏","电子游戏":"游戏","打排位":"游戏",
+    "听音乐":"音乐","听歌曲":"音乐","听歌":"听歌","爱听歌":"听歌",
+    "看电影":"电影","追剧":"电影","刷剧":"电影","看剧":"电影","电视剧":"电影","看电视剧":"电影",
+    "撸猫":"猫","养猫":"猫","猫咪":"猫","吸猫":"猫",
+    "遛狗":"狗","养狗":"狗","狗狗":"狗",
+    "撸铁":"健身","举铁":"健身","练肌肉":"健身",
+    "跑步":"运动","慢跑":"运动","夜跑":"运动","晨跑":"运动","打球":"运动",
+    "看书":"读书","看小说":"读书","读小说":"读书","小说":"读书",
+    "写代码":"写作","码字":"写作","写文章":"写作",
+    "打王者":"王者荣耀","玩王者":"王者荣耀","玩王者荣耀":"王者荣耀","王者":"王者荣耀",
+    "打英雄联盟":"英雄联盟","玩英雄联盟":"英雄联盟","lol":"英雄联盟"
+  };
+  function normalizeHobby(h){
+    if(HOBBY_TAILS[h] || HUMOR_TAILS[h]) return h;
+    var k = String(h).toLowerCase().replace(/\s+/g, "");
+    return HOBBY_ALIAS[k] || h;
+  }
+  function tailsFor(h){
+    var key = normalizeHobby(h);
+    if(HOBBY_TAILS[key]) return HOBBY_TAILS[key];
+    return GENERIC_TAILS.map(function(t){ return t.replace(/\{h\}/g, h); });
+  }
+
+  // ---------- 幽默素材：每个爱好一组搞怪“后半句” ----------
+  var HUMOR_TAILS = {
+    "摄影":["拍照时记得把我也拍好看点","滤镜可以没有，快门不能停","把生活拍成大片，哪怕其实是泡面"],
+    "拍照":["随手拍都像大片，气死摄影师","美颜开最大，快乐也开最大","记录生活，顺便记录我的颜值"],
+    "读书":["书的腰封可以拆，脑子别懒","读到无聊的章节允许跳读","在书里环游世界，票价全免"],
+    "阅读":["看书姿势怎么舒服怎么来","读到困了也行，梦里接着读","书架越满，底气越足"],
+    "旅行":["钱包瘦了，回忆胖了","迷路也能迷出故事来","景点打卡之外，记得打卡好吃的"],
+    "旅游":["行李箱装不下就再买一个","拍照两小时，游玩五分钟","朋友圈素材已就位"],
+    "烹饪":["做饭翻车也没事，外卖救场","盐放多了叫风味，放少了叫清淡","把厨房变成你的小实验室"],
+    "做饭":["黑暗料理也在所难免，勇者无畏","番茄炒蛋先练熟，王者起步","喂饱自己就是成年礼"],
+    "美食":["体重是小事，快乐是大事","为了吃多远都值得","火锅奶茶烧烤，一个都不能少"],
+    "音乐":["耳机一戴，谁也不爱","跑步听什么你说了算","把烦恼调成静音，音乐开最大"],
+    "唱歌":["五音缺了仨但气势拉满","KTV里你就是C位","跑调是特色不是缺点"],
+    "听歌":["单曲循环到室友背下来","歌词比说明书还熟","悲伤的歌配快乐的你"],
+    "运动":["跑完步朋友圈必须发","配速不重要，没晕倒就行","流汗是身体在给你鼓掌"],
+    "健身":["肌肉可以小，自律必须大","举铁举的是生活的分量","镜子里的线条慢慢会有"],
+    "瑜伽":["下犬式撑住，生活也撑住","拉伸一下，烦恼也松一下","冥想五分钟，续命一整天"],
+    "舞蹈":["四肢不协调也能很快乐","跳舞不需要观众，自己爽就够","动次打次，烦恼退退退"],
+    "绘画":["画得像不像不重要，像你就行","调色翻车也能叫抽象派","随手一画挂墙都行"],
+    "画画":["涂鸦是成年人的过家家","画错一笔就当故意的","灵感来了挡都挡不住"],
+    "电影":["爆米花比剧情重要","看到烂片也是一种阅历","二刷三刷真爱无敌"],
+    "游戏":["上分随缘，快乐为先","队友坑了，你坑得可爱","通关那一刻世界安静了"],
+    "咖啡":["早C晚A精神永在","美式续命，拿铁续快乐","咖啡因含量=今日战斗力"],
+    "茶":["保温杯里泡枸杞，养生从年轻起","茶凉了再倒，不急","一杯茶，半日仙"],
+    "园艺":["种点草，也种点花","多肉比你还能扛","阳台一平米自有小自然"],
+    "养花":["花没开别急，它在憋大招","浇水靠玄学，开花靠运气","叶子黄了问题不大"],
+    "钓鱼":["坐一天没口叫修行","钓到的是鱼，放生的是烦恼","姜太公的快乐你不懂"],
+    "宠物":["猫主子满意你就胜利","铲屎是爱的具象化","它们是你的小太阳"],
+    "猫":["猫不理你很正常","它睡你也睡，养生搭子","撸猫一时爽，一直撸一直爽"],
+    "狗":["狗子一摇尾，烦恼全飞","它是你最铁的哥们","遛狗顺便遛自己"],
+    "手工":["手残也能做出灵魂","针线里缝的是耐心","DIY的快乐买的没有"],
+    "烘焙":["烤焦了叫焦糖风味","面团发酵，心情也发酵","甜点治百病，亲测有效"],
+    "书法":["字丑不怕，气势要足","临帖练的是定力","写完一张成就感拉满"],
+    "写作":["写废的稿子也是经历","灵感像猫叫不来","把心事写下来，轻一点"],
+    "动漫":["二次元没有年龄限制","中二病一辈子治不好","热血番续命专用"],
+    "滑雪":["摔得越多，滑得越勇","雪场任你浪，注意护膝","速度与白痴只差一摔"],
+    "骑行":["骑到腿软，笑到脸酸","风大算什么，自由大","车轮一转，烦恼滚蛋"],
+    "爬山":["登顶不重要，喘匀就行","山就在那，慢慢爬","登高一声吼，烦恼全没有"],
+    "rap":["flow一开，谁都拦不住","押韵押的是态度","麦克风是你的扩音器"],
+    "英雄联盟":["上分随缘，快乐加倍","队友坑了，你笑就行","峡谷归来，仍是少年"],
+    "鹅鸭杀":["当好人别总被首杀，当内鬼请演技在线","开会甩锅的时机刚刚好","快乐划水，输赢随缘"],
+    "王者荣耀":["上分随缘，快乐加倍","红buff给你，蓝buff归我","推塔别上头，活着才有输出"]
+  };
+  // 幽默兜底：同样需兼容名词/动词短语爱好，句式统一为「愿X…」，避免“在打游戏上/把打游戏玩出花”这类病句
+  var GENERIC_HUMOR = [
+    "{h}一直给你快乐，别停",
+    "{h}的快乐，永远续费成功",
+    "{h}替你，把无聊都赶跑"
+  ];
+  function humorTailsFor(h){
+    var key = normalizeHobby(h);
+    if(HUMOR_TAILS[key]) return HUMOR_TAILS[key];
+    return GENERIC_HUMOR.map(function(t){ return t.replace(/\{h\}/g, h); });
+  }
+  var REFLECT_POOL = [
+    "时间不声不响，却把你酿得更好了。",
+    "你不需要多厉害，开心就很好。",
+    "慢慢走，我们都在你身后。",
+    "愿望很小，平安就好，其他的随缘。"
+  ];
+
+  // ---------- 祝福语构件：类型（场合）× 风格（语气/长度） ----------
+  var OPENINGS_BY_TYPE = {
+    birthday: ["{name}，生日快乐呀。","嘿 {name}，又一年啦。","{name}，新的一岁开始了。","生日快乐，{name}。","今天是你的日子，{name}。"],
+    anniversary: ["{name}，纪念日快乐。","{name}，今天是属于你们的日子。","嘿 {name}，又一年走过啦。","{name}，纪念快乐呀。"],
+    cheer: ["{name}，想跟你说几句。","{name}，今天的你也很棒。","嘿 {name}，别慌，听我说。","{name}，加油呀。"]
+  };
+  var EYEBROW_BY_TYPE = {
+    birthday:"🎂 Happy Birthday",
+    anniversary:"💞 Happy Anniversary",
+    cheer:"✨ Cheer Up"
+  };
+  var ENDINGS_BY_TYPE = {
+    birthday: ["生日快乐，愿你被爱，也被自己偏爱。","往后的日子，多有欢喜，少有慌张。","新的一岁，平安，喜乐，自由。","愿你眼里有光，脚下有路。","慢慢来，一切都刚好。","愿你所念皆所愿，所行化坦途。"],
+    anniversary: ["纪念日快乐，愿你们一直这么好。","往后的日子，一起慢慢走。","愿这份心意，年年都有处安放。","平凡里的浪漫，你们最懂。"],
+    cheer: ["加油，你比自己想的更行。","撑不住时回头看看，我们在。","你超棒的，别怀疑。","慢慢来，花开自有时。"]
+  };
+  var MIDDLE_FALLBACK = "愿你按自己的节奏，慢慢长大，也慢慢被温柔以待。";
+
+  // 每种风格：开场白续句、素材来源、连接词、是否加反思句、结尾句数
+  var STYLE_CFG = {
+    teen:  { leads:["今天，","说点真心话，","其实想叮嘱你的挺多，","啰嗦两句，",""], src:"normal", connect:"，也愿", reflect:false, short:false },
+    humor: { leads:["听好，","说真的，","别眨眼，",""], src:"humor", connect:"，顺便愿", reflect:false, short:false },
+    brief: { leads:[""], src:"normal", connect:"，也愿", reflect:false, short:true },
+    long:  { leads:["想慢慢跟你说：","看着你，想唠叨几句：","关于你，我有好多话想讲："], src:"normal", connect:"，也愿", reflect:true, short:false }
+  };
+
+  // ---------- 生成祝福语 ----------
+  function buildBlessing(name, age, hobbies, shuffle, styleKey, typeKey){
+    styleKey = STYLE_CFG[styleKey] ? styleKey : "teen";
+    typeKey = OPENINGS_BY_TYPE[typeKey] ? typeKey : "birthday";
+    var who = name && name.trim() ? name.trim() : "朋友";
+    var openings = OPENINGS_BY_TYPE[typeKey];
+    var opening = openings[Math.floor(Math.random()*openings.length)].replace(/\{name\}/g, who);
+
+    var cfg = STYLE_CFG[styleKey];
+    var tailFn = cfg.src === "humor" ? humorTailsFor : tailsFor;
+    var hs = hobbies.slice(0,3);
+    var middle;
+    if(hs.length){
+      var lead = cfg.leads[Math.floor(Math.random()*cfg.leads.length)];
+      var used = {};
+      var tails = hs.map(function(h){
+        var t = tailFn(h);
+        var i = Math.floor(Math.random()*t.length);
+        // 避免同一张卡里多个爱好抽到完全相同的模板句（兜底素材时尤其重要）
+        var guard = 0;
+        while(used[i] && t.length>1 && guard<12){ i = Math.floor(Math.random()*t.length); guard++; }
+        used[i] = true;
+        return t[i];
+      });
+      middle = lead + "愿" + tails.join(cfg.connect) + "。";
+      if(cfg.reflect){ middle += "\n" + REFLECT_POOL[Math.floor(Math.random()*REFLECT_POOL.length)]; }
+    } else {
+      middle = MIDDLE_FALLBACK;
+    }
+
+    var nEnd = cfg.short ? 1 : 2;
+    var ends = pickDistinct(nEnd, ENDINGS_BY_TYPE[typeKey]);
+
+    return opening + "\n" + middle + (nEnd===1 ? "\n"+ends[0] : "\n"+ends[0]+"\n"+ends[1]);
+  }
+
+  // ---------- 渲染到预览 ----------
+  function getStyle(){ var a=$("styleSeg").querySelector(".active"); return a?a.dataset.v:"teen"; }
+  function getType(){ var a=$("typeSeg").querySelector(".active"); return a?a.dataset.v:"birthday"; }
+
+  function render(){
+    var name = $("name").value.trim();
+    var ageRaw = $("age").value.trim();
+    var age = ageRaw ? parseInt(ageRaw,10) : null;
+    if(age && (age<1 || age>120)) age = null;
+    var hobbies = parseHobbies($("hobbies").value);
+    var type = getType();
+
+    $("cardEyebrow").textContent = (EYEBROW_BY_TYPE[type] || EYEBROW_BY_TYPE.birthday);
+    $("cardName").textContent = name || "亲爱的你";
+    if(type==="birthday"){
+      $("cardAge").textContent = age ? ("第 " + age + " 个生日 · " + age + " YEARS") : "又一年，值得纪念";
+    } else if(type==="anniversary"){
+      $("cardAge").textContent = "值得纪念的一天";
+    } else {
+      $("cardAge").textContent = "你比想象中更强";
+    }
+    $("cardBlessing").textContent = buildBlessing(name, age, hobbies, false, getStyle(), type);
+
+    var tagsEl = $("cardTags");
+    tagsEl.innerHTML = "";
+    hobbies.slice(0,6).forEach(function(h){
+      var s = document.createElement("span");
+      s.className = "tag";
+      s.textContent = h;
+      tagsEl.appendChild(s);
+    });
+
+    var card = $("card");
+    card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
+  }
+
+  function reshuffle(){
+    var name = $("name").value.trim();
+    var ageRaw = $("age").value.trim();
+    var age = ageRaw ? parseInt(ageRaw,10) : null;
+    if(age && (age<1 || age>120)) age = null;
+    var hobbies = parseHobbies($("hobbies").value);
+    $("cardBlessing").textContent = buildBlessing(name, age, hobbies, true, getStyle(), getType());
+  }
+
+  // ---------- 分享链接（把输入编码进 URL hash） ----------
+  function setSeg(id, v){
+    var seg = $(id);
+    var btns = seg.querySelectorAll("button");
+    for(var i=0;i<btns.length;i++){ btns[i].classList.toggle("active", btns[i].dataset.v===v); }
+    if(id==="typeSeg"){ $("ageField").style.display = (v==="birthday") ? "" : "none"; }
+  }
+  function encodeState(){
+    var data = {
+      n: $("name").value.trim(),
+      a: $("age").value.trim(),
+      h: $("hobbies").value.trim(),
+      t: getType(),
+      s: getStyle()
+    };
+    try{
+      return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    }catch(e){ return ""; }
+  }
+  function applyStateFromHash(){
+    if(location.hash.length<2) return false;
+    try{
+      var json = decodeURIComponent(escape(atob(location.hash.slice(1))));
+      var d = JSON.parse(json);
+      if(d.n!=null) $("name").value = d.n;
+      if(d.a!=null) $("age").value = d.a;
+      if(d.h!=null) $("hobbies").value = d.h;
+      setSeg("typeSeg", d.t || "birthday");
+      setSeg("styleSeg", d.s || "teen");
+      return true;
+    }catch(e){ return false; }
+  }
+
+  // ---------- 下载为图片（纯 Canvas，无依赖） ----------
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+  function wrapText(ctx, text, maxW){
+    // 支持手动 \n 与自动换行；返回行数组
+    var out = [];
+    var paragraphs = text.split("\n");
+    paragraphs.forEach(function(para){
+      if(para === ""){ out.push(""); return; }
+      var line = "";
+      for(var i=0;i<para.length;i++){
+        var test = line + para[i];
+        if(ctx.measureText(test).width > maxW && line){
+          out.push(line);
+          line = para[i];
+        } else {
+          line = test;
+        }
+      }
+      if(line) out.push(line);
+    });
+    return out;
+  }
+  function drawCardImage(cb){
+    var c = document.createElement("canvas");
+    var dpr = Math.min(window.devicePixelRatio||1, 2);
+    var W = 800, H = 1000;
+    c.width = W*dpr; c.height = H*dpr;
+    var ctx = c.getContext("2d");
+    ctx.scale(dpr,dpr);
+
+    // 背景（柔和粉渐变）
+    var grad = ctx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0, "#FFFDFB");
+    grad.addColorStop(1, "#FFF1F5");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+    // 内框
+    ctx.strokeStyle = "#FFB9D2";
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.8;
+    roundRect(ctx, 34,34, W-68, H-68, 16); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    var eyebrow = $("cardEyebrow").textContent || "Happy Birthday";
+    var name = $("cardName").textContent;
+    var age = $("cardAge").textContent;
+    var blessing = $("cardBlessing").textContent;
+    var hobbies = Array.prototype.map.call($("cardTags").children, function(el){return el.textContent;});
+
+    ctx.textAlign = "center";
+
+    // eyebrow
+    ctx.fillStyle = "#FF7EA8";
+    ctx.font = '500 16px "Noto Sans SC", sans-serif';
+    if("letterSpacing" in ctx) ctx.letterSpacing = "6px";
+    ctx.fillText(eyebrow, W/2, 120);
+    if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+
+    // name
+    ctx.fillStyle = "#FF7EA8";
+    ctx.font = '400 60px "ZCOOL KuaiLe","Noto Serif SC", cursive';
+    ctx.fillText(name, W/2, 232);
+
+    // age
+    ctx.fillStyle = "#9A8A8A";
+    ctx.font = '400 18px "Noto Sans SC", sans-serif';
+    ctx.fillText(age, W/2, 282);
+
+    // divider
+    ctx.strokeStyle = "#FFB9D2";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(W/2-26, 332); ctx.lineTo(W/2+26, 332); ctx.stroke();
+
+    // blessing
+    ctx.fillStyle = "#4A3F3F";
+    ctx.font = '400 21px "Noto Serif SC", serif';
+    var lines = wrapText(ctx, blessing, 600);
+    var lh = 38, startY = 394;
+    lines.forEach(function(ln, idx){ ctx.fillText(ln, W/2, startY + idx*lh); });
+
+    // tags
+    if(hobbies.length){
+      ctx.font = '400 15px "Noto Sans SC", sans-serif';
+      var padX = 16, gap = 12, th = 34, ty = H - 120;
+      var widths = hobbies.map(function(t){ return ctx.measureText(t).width + padX*2; });
+      var totalW = widths.reduce(function(a,b){return a+b;},0) + gap*(hobbies.length-1);
+      var sx = (W - totalW)/2;
+      ctx.strokeStyle = "#FF7EA8";
+      ctx.lineWidth = 1.5;
+      ctx.fillStyle = "#FF7EA8";
+      hobbies.forEach(function(t,i){
+        var tw = widths[i];
+        roundRect(ctx, sx, ty, tw, th, th/2); ctx.stroke();
+        ctx.fillText(t, sx + tw/2, ty + 22);
+        sx += tw + gap;
+      });
+    }
+
+    // sig
+    ctx.fillStyle = "#C9A9B0";
+    ctx.font = '400 12px "Noto Sans SC", sans-serif';
+    if("letterSpacing" in ctx) ctx.letterSpacing = "6px";
+    ctx.fillText("WITH LOVE", W/2, H - 56);
+    if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+
+    cb(c);
+  }
+  function downloadCard(){
+    drawCardImage(function(c){
+      try{
+        var url = c.toDataURL("image/png");
+        var a = document.createElement("a");
+        var nm = ($("name").value.trim() || "生日贺卡");
+        a.download = nm + "_生日贺卡.png";
+        a.href = url;
+        document.body.appendChild(a); a.click(); a.remove();
+      }catch(e){
+        alert("生成图片失败：" + e.message);
+      }
+    });
+  }
+
+  // ---------- 事件 ----------
+  function celebrate(){
+    var emojis = ["🎉","✨","🎈","💛","🎂","🌟"];
+    for(var i=0;i<16;i++){
+      (function(){
+        var s = document.createElement("span");
+        s.className = "confetti";
+        s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        s.style.left = (Math.random()*100) + "vw";
+        s.style.top = (Math.random()*18) + "vh";
+        var dur = 0.9 + Math.random()*0.8;
+        s.style.animationDuration = dur + "s";
+        document.body.appendChild(s);
+        setTimeout(function(){ s.remove(); }, dur*1000 + 120);
+      })();
+    }
+  }
+  function bindSeg(id, onChange){
+    var seg = $(id);
+    var btns = seg.querySelectorAll("button");
+    for(var i=0;i<btns.length;i++){
+      btns[i].addEventListener("click", function(){
+        var cur = seg.querySelector(".active");
+        if(cur) cur.classList.remove("active");
+        this.classList.add("active");
+        if(id==="typeSeg"){ $("ageField").style.display = (this.dataset.v==="birthday") ? "" : "none"; }
+        onChange();
+      });
+    }
+  }
+  bindSeg("typeSeg", render);
+  bindSeg("styleSeg", render);
+  $("genBtn").addEventListener("click", function(){ render(); celebrate(); });
+  $("shuffleBtn").addEventListener("click", reshuffle);
+  $("downloadBtn").addEventListener("click", downloadCard);
+  $("printBtn").addEventListener("click", function(){ window.print(); });
+  $("shareBtn").addEventListener("click", function(){
+    var hash = encodeState();
+    if(!hash){ alert("请先填写一些信息再生成分享链接"); return; }
+    var url = location.origin + location.pathname + "#" + hash;
+    // 同步到地址栏，便于手动复制
+    history.replaceState(null,"",url);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){
+        alert("分享链接已复制到剪贴板，打开即可看到这张贺卡。");
+      }, function(){
+        prompt("复制下面的链接分享给朋友：", url);
+      });
+    } else {
+      prompt("复制下面的链接分享给朋友：", url);
+    }
+  });
+  // 实时预览（输入即更新姓名/标签，年龄行按类型显示，祝福语仍由“生成/换一句”控制）
+  ["name","age","hobbies"].forEach(function(id){
+    $(id).addEventListener("input", function(){
+      var name = $("name").value.trim();
+      var ageRaw = $("age").value.trim();
+      var age = ageRaw ? parseInt(ageRaw,10) : null;
+      if(age && (age<1||age>120)) age=null;
+      var type = getType();
+      $("cardName").textContent = name || "亲爱的你";
+      if(type==="birthday"){
+        $("cardAge").textContent = age ? ("第 "+age+" 个生日 · "+age+" YEARS") : "又一年，值得纪念";
+      } else if(type==="anniversary"){
+        $("cardAge").textContent = "值得纪念的一天";
+      } else {
+        $("cardAge").textContent = "你比想象中更强";
+      }
+      var hobbies = parseHobbies($("hobbies").value);
+      var tagsEl = $("cardTags"); tagsEl.innerHTML="";
+      hobbies.slice(0,6).forEach(function(h){
+        var s=document.createElement("span"); s.className="tag"; s.textContent=h; tagsEl.appendChild(s);
+      });
+    });
+  });
+
+  // ---------- 初始化 ----------
+  if(applyStateFromHash()){ render(); }
+  // 字体加载完成后重绘图片相关（DOM 文本已就绪）
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(function(){ /* 字体就绪，下载时更准确 */ });
+  }
+})();
+</script>
+</body>
+</html>
